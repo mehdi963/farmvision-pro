@@ -1,0 +1,3 @@
+"scripts": {
+  "migrate": "node-pg-migrate -d postgres://${PGUSER}:${PGPASSWORD}@${PGHOST}:${PGPORT}/${PGDATABASE}"
+}
