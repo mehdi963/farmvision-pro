@@ -1,0 +1,8 @@
+CREATE TABLE parcels (
+    id UUID PRIMARY KEY,
+    name TEXT NOT NULL,
+    area_hectares FLOAT NOT NULL,
+    crop_type TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
