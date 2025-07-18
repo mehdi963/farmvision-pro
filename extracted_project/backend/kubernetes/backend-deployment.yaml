@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  labels:
+    app: farmvision
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: farmvision
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: farmvision
+        tier: backend
+    spec:
+      containers:
+      - name: backend
+        image: farmvision-backend:latest
+        ports:
+        - containerPort: 4000
+        env:
+        - name: PGHOST
+          value: postgres
+        - name: PGUSER
+          value: farmvision
+        - name: PGPASSWORD
+          value: farmvisionpass
+        - name: PGDATABASE
+          value: farmvisiondb
+        - name: JWT_SECRET
+          value: supersecret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+spec:
+  selector:
+    app: farmvision
+    tier: backend
+  ports:
+    - protocol: TCP
+      port: 4000
+      targetPort: 4000
+  type: ClusterIP
