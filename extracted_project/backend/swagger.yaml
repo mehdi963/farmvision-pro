@@ -1,0 +1,25 @@
+openapi: 3.0.1
+info:
+  title: FarmVision Pro API
+  version: 1.0.0
+paths:
+  /api/users/register:
+    post:
+      summary: Register new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string }
+                password: { type: string }
+      responses:
+        '201': { description: Created }
+  /api/sensors:
+    post:
+      summary: Create sensor
+      responses:
+        '201': { description: Sensor created }
