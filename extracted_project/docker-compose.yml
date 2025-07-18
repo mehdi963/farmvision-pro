@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: farmvision
+      POSTGRES_PASSWORD: farmvisionpass
+      POSTGRES_DB: farmvisiondb
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./backend
+    environment:
+      PGUSER: farmvision
+      PGPASSWORD: farmvisionpass
+      PGHOST: db
+      PGDATABASE: farmvisiondb
+    ports:
+      - "4000:4000"
+    depends_on:
+      - db
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
