@@ -1,0 +1,15 @@
+{
+  "title": "Backend Metrics",
+  "panels": [
+    {
+      "type": "graph",
+      "title": "HTTP Requests",
+      "targets": [
+        {
+          "expr": "rate(http_requests_total[1m])",
+          "legendFormat": "{{method}} {{status}}"
+        }
+      ]
+    }
+  ]
+}
