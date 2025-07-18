@@ -1,0 +1,252 @@
+1. backend/Dockerfile
+dockerfile
+Copier
+Modifier
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Installer les dépendances
+COPY backend/package*.json ./
+RUN npm ci
+
+# Copier le code source
+COPY backend/. .
+
+# Exposer le port backend
+EXPOSE 4000
+
+# Démarrer l'application
+CMD ["npm", "start"]
+2. frontend/Dockerfile
+dockerfile
+Copier
+Modifier
+FROM node:20-alpine AS build
+
+WORKDIR /app
+
+# Installer les dépendances
+COPY frontend/package*.json ./
+RUN npm ci
+
+# Copier le code source + builder
+COPY frontend/. .
+RUN npm run build
+
+# Étape de production
+FROM nginx:1.25-alpine
+COPY --from=build /app/build /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+3. docker-compose.yml
+yaml
+Copier
+Modifier
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "4000:4000"
+    environment:
+      - PGHOST=db
+      - PGUSER=${PGUSER}
+      - PGPASSWORD=${PGPASSWORD}
+      - PGDATABASE=${PGDATABASE}
+      - PGPORT=5432
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=${PGUSER}
+      - POSTGRES_PASSWORD=${PGPASSWORD}
+      - POSTGRES_DB=${PGDATABASE}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  pgdata:
+4. .env
+env
+Copier
+Modifier
+PGUSER=farmvision
+PGPASSWORD=supersecret
+PGDATABASE=farmvisiondb
+5. schéma.sql
+sql
+Copier
+Modifier
+-- Users
+CREATE TABLE Users (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(50) UNIQUE NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  email VARCHAR(100) UNIQUE NOT NULL,
+  role VARCHAR(20) NOT NULL DEFAULT 'farmer',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Zones (Parcelles)
+CREATE TABLE Parcelles (
+  id SERIAL PRIMARY KEY,
+  owner_id INT NOT NULL REFERENCES Users(id),
+  name VARCHAR(100) NOT NULL,
+  area DECIMAL(10,2) NOT NULL,
+  geometry GEOMETRY(Polygon,4326),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Cultures
+CREATE TABLE Cultures (
+  id SERIAL PRIMARY KEY,
+  parcelle_id INT NOT NULL REFERENCES Parcelles(id),
+  type VARCHAR(50) NOT NULL,
+  planted_on DATE NOT NULL,
+  harvested_on DATE,
+  yield_est DECIMAL(10,2),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Animaux
+CREATE TABLE Animaux (
+  id SERIAL PRIMARY KEY,
+  owner_id INT NOT NULL REFERENCES Users(id),
+  species VARCHAR(50) NOT NULL,
+  age INT,
+  health_status VARCHAR(100),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Alertes
+CREATE TABLE Alertes (
+  id SERIAL PRIMARY KEY,
+  user_id INT NOT NULL REFERENCES Users(id),
+  type VARCHAR(50) NOT NULL,
+  message TEXT NOT NULL,
+  triggered_at TIMESTAMPTZ DEFAULT NOW(),
+  resolved BOOL DEFAULT FALSE
+);
+6. swagger.yaml
+yaml
+Copier
+Modifier
+openapi: 3.0.0
+info:
+  title: FarmVision Pro API
+  version: 1.0.0
+  description: API pour la gestion agricole connectée
+
+servers:
+  - url: http://localhost:4000/api
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id: integer
+        username: string
+        email: string
+        role: string
+      required: [id, username, email]
+    Parcelle:
+      type: object
+      properties:
+        id: integer
+        owner_id: integer
+        name: string
+        area: number
+      required: [id, owner_id, name, area]
+
+paths:
+  /users:
+    get:
+      summary: Liste des utilisateurs
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    post:
+      summary: Créer un utilisateur
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, email, password]
+              properties:
+                username: string
+                email: string
+                password: string
+      responses:
+        '201':
+          description: Utilisateur créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /parcelles:
+    get:
+      summary: Liste des parcelles
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Parcelle'
+    post:
+      summary: Créer une parcelle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [owner_id, name, area]
+              properties:
+                owner_id: integer
+                name: string
+                area: number
+      responses:
+        '201':
+          description: Parcelle créée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Parcelle'
+7. Résumé et recommandations
+Item	✅ Prêt	💡 À faire
+Dockerfile backend	✔️	-
+Dockerfile frontend	✔️	-
+docker-compose.yml	✔️	-
+.env file	✔️	-
+schéma.sql	✔️	Index, contraintes supplémentaires selon besoins
+swagger.yaml	✔️	Ajouter tous les endpoints restants (+ exemple de réponse)
