@@ -1,0 +1,154 @@
+openapi: 3.0.0
+info:
+  title: FarmVision Pro API
+  version: 1.0.0
+  description: API pour la gestion agricole connectée
+
+servers:
+  - url: http://localhost:3000
+    description: Serveur de développement
+
+paths:
+  /auth/register:
+    post:
+      summary: Enregistrer un nouvel utilisateur
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                email:
+                  type: string
+              required:
+                - username
+                - password
+                - email
+      responses:
+        '201':
+          description: Utilisateur enregistré avec succès
+        '400':
+          description: Requête invalide
+
+  /parcelles:
+    get:
+      summary: Récupérer toutes les parcelles
+      responses:
+        '200':
+          description: Liste des parcelles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    nom:
+                      type: string
+                    surface:
+                      type: number
+                    location:
+                      type: string
+    post:
+      summary: Créer une nouvelle parcelle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nom:
+                  type: string
+                surface:
+                  type: number
+                location:
+                  type: string
+              required:
+                - nom
+                - surface
+                - location
+      responses:
+        '201':
+          description: Parcelle créée avec succès
+        '400':
+          description: Requête invalide
+
+  /cultures:
+    get:
+      summary: Récupérer toutes les cultures
+      responses:
+        '200':
+          description: Liste des cultures
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    nom:
+                      type: string
+                    type:
+                      type: string
+                    date_plantation:
+                      type: string
+                      format: date
+                    date_recolte:
+                      type: string
+                      format: date
+    post:
+      summary: Créer une nouvelle culture
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                parcelle_id:
+                  type: integer
+                nom:
+                  type: string
+                type:
+                  type: string
+                date_plantation:
+                  type: string
+                  format: date
+                date_recolte:
+                  type: string
+                  format: date
+              required:
+                - parcelle_id
+                - nom
+                - type
+                - date_plantation
+                - date_recolte
+      responses:
+        '201':
+          description: Culture créée avec succès
+        '400':
+          description: Requête invalide
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
